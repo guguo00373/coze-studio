@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "opencoze.fullname" . }}-pg-init
+  labels:
+    {{- include "opencoze.labels" . | nindent 4 }}
+data:
+  schema.sql: |-
+{{ .Files.Get "files/postgres/schema.sql" | indent 4 }}
+{{- if .Values.postgresql.initJob.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "opencoze.fullname" . }}-pg-init
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-after-create": "true"
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: {{ .Values.images.busybox }}
+        command: ['sh', '-c', 'until nc -z {{ include "opencoze.postgresql.host" . }} {{ .Values.postgresql.port }}; do echo waiting for postgres; sleep 2; done']
+      - name: sql-init
+        image: {{ .Values.images.postgres | quote }}
+        command:
+        - "/bin/sh"
+        - "-c"
+        - |
+          set -e
+
+          # Create database and user if they do not already exist.
+          if ! PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -tAc "SELECT 1 FROM pg_database WHERE datname='{{ .Values.postgresql.database }}'" | grep -q 1; then
+            PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -c "CREATE DATABASE {{ .Values.postgresql.database }};"
+          fi
+          if ! PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -tAc "SELECT 1 FROM pg_roles WHERE rolname='{{ .Values.postgresql.user }}'" | grep -q 1; then
+            PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -c "CREATE USER {{ .Values.postgresql.user }} WITH PASSWORD '{{ .Values.postgresql.password }}';"
+          else
+            PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -c "ALTER USER {{ .Values.postgresql.user }} WITH PASSWORD '{{ .Values.postgresql.password }}';"
+          fi
+          PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -c "GRANT ALL PRIVILEGES ON DATABASE {{ .Values.postgresql.database }} TO {{ .Values.postgresql.user }};"
+          
+          # Grant schema permissions
+          PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -d {{ .Values.postgresql.database }} -c "GRANT ALL ON SCHEMA public TO {{ .Values.postgresql.user }};"
+          PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -d {{ .Values.postgresql.database }} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO {{ .Values.postgresql.user }};"
+          PGPASSWORD="{{ .Values.postgresql.superPassword }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.superUser }} -d {{ .Values.postgresql.database }} -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO {{ .Values.postgresql.user }};"
+          
+          # Execute schema
+          PGPASSWORD="{{ .Values.postgresql.password }}" psql -h {{ include "opencoze.postgresql.host" . }} -p {{ .Values.postgresql.port }} -U {{ .Values.postgresql.user }} -d {{ .Values.postgresql.database }} -f /sql/schema.sql
+          
+          echo "PostgreSQL initialization complete!"
+        volumeMounts:
+        - name: schema-sql
+          mountPath: /sql/schema.sql
+          subPath: schema.sql
+      containers:
+      - name: job-completer
+        image: {{ .Values.images.busybox }}
+        command: ["echo", "PostgreSQL initialization complete"]
+      volumes:
+      - name: schema-sql
+        configMap:
+          name: {{ include "opencoze.fullname" . }}-pg-init
+          items:
+            - key: schema.sql
+              path: schema.sql
+      restartPolicy: Never
+  backoffLimit: 5
+{{- end }}

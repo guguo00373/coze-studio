@@ -1,0 +1,263 @@
+# Default values for opencoze.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+mysql:
+  enabled: true
+  port: 3306
+  targetPort: 3306
+  image:
+    repository: harbor.ubidirector.cn/coze/mysql
+    tag: 8.4.5
+  rootPassword: "root"
+  database: opencoze
+  user: coze
+  password: coze123
+  persistence:
+    storageClassName: "coze-storage"
+    size: "50Gi"
+  initScripts:
+    - files/mysql/schema.sql
+
+oceanbase:
+  enabled: false
+
+redis:
+  enabled: true
+  image:
+    repository: harbor.ubidirector.cn/coze/redis
+    tag: "8.0"
+  aofEnabled: "no"
+  port: 6379
+  ioThreads: 4
+  allowEmptyPassword: "yes"
+  password: ""
+  persistence:
+    storageClassName: "coze-storage"
+    size: "50Gi"
+
+# -- coze-server configuration
+cozeServer:
+  enabled: true
+  replicaCount: 1
+
+  image:
+    repository: harbor.ubidirector.cn/coze/coze-studio-server
+    pullPolicy: IfNotPresent
+    tag: 'latest'
+
+  service:
+    type: LoadBalancer
+    ports:
+      - name: http
+        port: 8888
+        targetPort: 8888
+      - name: minio-proxy
+        port: 8889
+        targetPort: 8889
+
+  env:
+    LISTEN_ADDR: ":8888"
+    SERVER_HOST: "localhost${LISTEN_ADDR}"
+    LOG_LEVEL: "debug"
+    MAX_REQUEST_BODY_SIZE: "1073741824"
+    STORAGE_TYPE: "minio"
+    MINIO_PROXY_ENDPOINT: ":8889"
+    COZE_MQ_TYPE: rmq
+    ES_VERSION: "v8"
+    VECTOR_STORE_TYPE: "milvus"
+    EMBEDDING_TYPE: "openai"
+    FILE_UPLOAD_COMPONENT_TYPE: "storage"
+    OPENAI_EMBEDDING_BASE_URL: "https://api.openai.com/v1/embeddings"
+    OPENAI_EMBEDDING_MODEL: "text-embedding-3-large"
+    OPENAI_EMBEDDING_BY_AZURE: "false"
+    OPENAI_EMBEDDING_DIMS: "1024"
+    OCR_TYPE: "ve"
+    BUILTIN_CM_TYPE: "openai"
+    BUILTIN_CM_OPENAI_BY_AZURE: "false"
+
+rocketmq:
+  enabled: true
+  namesrv:
+    replicaCount: 1
+    image:
+      repository: harbor.ubidirector.cn/coze/rocketmq
+      tag: 5.3.2
+    persistence:
+      store:
+        storageClassName: "coze-storage"
+        size: "20Gi"
+      logs:
+        storageClassName: "coze-storage"
+        size: "20Gi"
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+    livenessProbe:
+      exec:
+        command: ["sh", "-c", "mqadmin clusterList -n localhost:9876"]
+      initialDelaySeconds: 30
+      periodSeconds: 10
+  topics:
+    - opencoze_knowledge
+    - opencoze_search_app
+    - opencoze_search_resource
+    - "%RETRY%cg_knowledge"
+    - "%RETRY%cg_search_app"
+    - "%RETRY%cg_search_resource"
+  consumerGroups:
+    - cg_knowledge
+    - cg_search_app
+    - cg_search_resource
+  broker:
+    replicaCount: 1
+    image:
+      repository: harbor.ubidirector.cn/coze/rocketmq
+      tag: 5.3.2
+    config: |
+      brokerClusterName = DefaultCluster
+      brokerName = broker-a
+      brokerId = 0
+      deleteWhen = 04
+      fileReservedTime = 48
+      brokerRole = ASYNC_MASTER
+      flushDiskType = ASYNC_FLUSH
+    persistence:
+      store:
+        storageClassName: "coze-storage"
+        size: "20Gi"
+      logs:
+        storageClassName: "coze-storage"
+        size: "20Gi"
+    resources:
+      limits:
+        cpu: 4000m
+        memory: 8Gi
+    initContainers:
+      - name: wait-for-namesrv
+        image: harbor.ubidirector.cn/coze/busybox:latest
+        command: ['sh', '-c', 'until nc -z rocketmq-namesrv 9876; do echo waiting for namesrv; sleep 2; done']
+
+elasticsearch:
+  enabled: true
+  image:
+    repository: harbor.ubidirector.cn/coze/elasticsearch
+    tag: 8.18.0
+  javaOpts: "-Djdk.tls.client.protocols=TLSv1.2 -Dhttps.protocols=TLSv1.2 -Djavax.net.ssl.trustAll=true -Xms4096m -Xmx4096m"
+  username: ""
+  password: ""
+  persistence:
+    enabled: true
+    storageClassName: "coze-storage"
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+  service:
+    type: ClusterIP
+    port: 9200
+    targetPort: 9200
+
+minio:
+  enabled: true
+  image:
+    repository: harbor.ubidirector.cn/coze/minio
+    tag: RELEASE.2025-06-13T11-33-47Z-cpuv1
+  accessKey: minioadmin
+  secretKey: minioadmin123
+  bucket: opencoze
+  service:
+    type: LoadBalancer
+    port: 9000
+    consolePort: 9001
+  persistence:
+    storageClassName: "coze-storage"
+    size: "50Gi"
+  resources:
+    limits:
+      cpu: 8000m
+      memory: 16Gi
+    requests:
+      cpu: 4000m
+      memory: 8Gi
+
+etcd:
+  enabled: true
+  image:
+    repository: harbor.ubidirector.cn/coze/etcd
+    tag: 3.5
+  persistence:
+    storageClassName: "coze-storage"
+    size: "20Gi"
+
+milvus:
+  enabled: true
+  image:
+    repository: harbor.ubidirector.cn/coze/milvus
+    tag: v2.5.10
+  bucketName: milvus
+  persistence:
+    storageClassName: "coze-storage"
+    size: "20Gi"
+
+# -- coze-web configuration (nginx frontend)
+cozeWeb:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: harbor.ubidirector.cn/coze/coze-studio-web
+    pullPolicy: IfNotPresent
+    tag: 'latest'
+  service:
+    type: LoadBalancer
+    port: 80
+
+images:
+  busybox: harbor.ubidirector.cn/coze/busybox:latest
+  curl: harbor.ubidirector.cn/coze/curl:8.12.1
+
+# -- ConfigMap for non-sensitive environment variables
+configMap:
+  enabled: true
+  data:
+    LOG_LEVEL: "debug"
+    STORAGE_TYPE: "minio"
+    ES_VERSION: "v8"
+    VECTOR_STORE_TYPE: "milvus"
+    EMBEDDING_TYPE: "openai"
+    BUILTIN_CM_TYPE: "openai"
+
+# -- Secret for sensitive data (passwords, API keys)
+secret:
+  enabled: true
+  stringData:
+    MYSQL_ROOT_PASSWORD: "root"
+    MYSQL_PASSWORD: "coze123"
+    MINIO_ROOT_PASSWORD: "minioadmin123"
+    OPENAI_API_KEY: "your_openai_api_key"
+    OPENAI_EMBEDDING_API_KEY: "your_openai_api_key"
+    BUILTIN_CM_OPENAI_API_KEY: "your_openai_api_key"
+
+# This is to override the chart name.
+nameOverride: ''
+fullnameOverride: ''
+
+podAnnotations: {}
+
+securityContext:
+  {}
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ''
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []

@@ -1,0 +1,9 @@
+apiVersion: v2
+name: opencoze-pg
+description: opencoze is an AI agent platform with external PostgreSQL support.
+
+type: application
+
+version: 0.0.1
+
+appVersion: '0.0.3'
