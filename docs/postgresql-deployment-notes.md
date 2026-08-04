@@ -35,6 +35,8 @@ Elasticsearch 首次启动需要安装 smartcn 中文分词插件、加载索引
 docker compose -f docker-compose.postgres.yml up -d
 ```
 
+> 注：ES 健康检查 `retries` 已从 10 提高到 30（容忍窗口约 8 分钟），慢机器上此问题的出现概率已大幅降低。
+
 ---
 
 ## 问题 2：`.env` 里配置的模型 key 不生效（compose 硬编码覆盖）
@@ -113,13 +115,21 @@ POST /api/intelligence_api/search/get_draft_intelligence_list
 
 ES 容器启动时会执行 `setup_es.sh` 注册索引模板（`project_draft`、`coze_resource`）并创建索引。问题 1 中首次启动被中止时，初始化流程被连带打断，但 compose 命令里初始化脚本是后台子 shell 执行、`touch /tmp/es_init_complete` 与脚本用 `;` 分隔——**脚本失败也会创建就绪标记**，导致健康检查通过、索引实际未创建，留下隐患。
 
-**解决**
+**解决（运行时临时修复）**
 
 手动重跑 ES 初始化脚本（幂等，已存在的模板/索引会跳过）：
 
 ```powershell
 docker exec coze-elasticsearch sh -c "sed 's/\r$//' /setup_es.sh > /tmp/setup_fixed.sh && sh /tmp/setup_fixed.sh --index-dir /es_index_schema"
 ```
+
+**根治方案（已提交到 docker-compose.postgres.yml）**
+
+1. 初始化脚本包在 5 次重试循环里，且**只有成功才 `touch /tmp/es_init_complete`**（原来是 `;` 顺序执行，失败也标记就绪）；全部失败时容器保持 unhealthy，错误显式可见
+2. ES 健康检查 `retries` 从 10 提到 30（容忍窗口约 8 分钟），覆盖慢机器首次装插件的耗时
+3. 容器每次重启都会自动重跑初始化（脚本幂等），`docker restart coze-elasticsearch` 即可触发重试
+
+索引数据持久化在 `docker/data/bitnami/elasticsearch` 卷中，日常重启/`up -d` 不会丢失，无需重复初始化。
 
 **验证**
 
@@ -142,7 +152,7 @@ compose 硬编码 `OPENAI_EMBEDDING_DIMS: "2048"`，而 `.env` 中是 `1024`（�
 
 执行 `docker compose -f docker-compose.postgres.yml down -v` 清空数据重新部署时：
 
-1. 问题 1（ES 假失败）和问题 5（索引缺失）可能复现，按上面命令重跑 `up -d` 和 ES 初始化脚本即可
+1. ES 索引初始化现在有 5 次自动重试 + 更长的健康检查窗口，正常情况可自愈；若仍失败，容器会保持 unhealthy（显式可见），执行 `docker restart coze-elasticsearch` 可触发重试，或按问题 5 的手动命令修复
 2. PostgreSQL 表结构（55 张表）由 postgres 容器首次启动自动执行 `volumes/postgres/schema.sql` 完成，无需人工干预
 3. `--build` 只有首次或后端代码变更后才需要
 

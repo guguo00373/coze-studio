@@ -80,7 +80,7 @@ services:
         ]
       interval: 5s
       timeout: 10s
-      retries: 10
+      retries: 30
       start_period: 10s
     networks:
       - coze-network
@@ -114,9 +114,19 @@ services:
           echo 'Running Elasticsearch initialization...'
           sed 's/\r$$//' /setup_es.sh > /setup_es_fixed.sh
           chmod +x /setup_es_fixed.sh
-          /setup_es_fixed.sh --index-dir /es_index_schema
-          touch /tmp/es_init_complete
-          echo 'Elasticsearch initialization completed successfully!'
+          for attempt in 1 2 3 4 5; do
+            echo Initialization attempt $$attempt...
+            if /setup_es_fixed.sh --index-dir /es_index_schema; then
+              touch /tmp/es_init_complete
+              echo 'Elasticsearch initialization completed successfully!'
+              break
+            fi
+            echo Initialization attempt $$attempt failed, retrying in 5s...
+            sleep 5
+          done
+          if [ ! -f /tmp/es_init_complete ]; then
+            echo 'ERROR: Elasticsearch initialization failed after all retries; container will stay unhealthy'
+          fi
         ) &
         exec /opt/bitnami/scripts/elasticsearch/entrypoint.sh /opt/bitnami/scripts/elasticsearch/run.sh
       "
