@@ -111,9 +111,12 @@ services:
             sleep 2
           done
           echo 'Elasticsearch is ready!'
-          echo 'Running Elasticsearch initialization...'
-          sed 's/\r$$//' /setup_es.sh > /setup_es_fixed.sh
-          chmod +x /setup_es_fixed.sh
+            echo 'Running Elasticsearch initialization...'
+            # Use tr (not sed) to strip CRLF: busybox sed does not interpret
+            # the \r escape in regex patterns, so 'sed s/\r$//' is a no-op on
+            # bind-mounted CRLF files.
+            tr -d '\r' < /setup_es.sh > /setup_es_fixed.sh
+            chmod +x /setup_es_fixed.sh
           for attempt in 1 2 3 4 5; do
             echo Initialization attempt $$attempt...
             if /setup_es_fixed.sh --index-dir /es_index_schema; then
