@@ -89,7 +89,15 @@ export const SegmentPreviewStep: FC<
       });
       if (res.code === 0 && res.reviews?.length) {
         setDocReviewList(res.reviews);
-        setCurrentReviewID(res.reviews[0].review_id ?? '');
+        // Only set the initial selection; never override a user-selected
+        // review. The effect can re-run when docReviewCreated toggles (e.g.
+        // after MGetDocumentReview replaces the list with reviews whose
+        // document_name hasn't settled), and we must not reset the user's
+        // current selection back to the first document.
+        const { currentReviewID: existingID } = useStore.getState();
+        if (!existingID) {
+          setCurrentReviewID(res.reviews[0].review_id ?? '');
+        }
       }
     };
     if (!docReviewCreated) {

@@ -110,7 +110,15 @@ export const SegmentPreview = (props: ISegmentPreviewProps) => {
         review_ids: docReviewList.map(item => item.review_id ?? ''),
       });
       if (res.code === 0) {
-        setDocReviewList?.(res.reviews ?? []);
+        const nextList = res.reviews ?? [];
+        setDocReviewList?.(nextList);
+        // If the current selection was dropped from the response, fall back
+        // to the first available review so the UI does not point at a
+        // non-existent review.
+        const cur = currentReviewID;
+        if (cur && !nextList.find(r => r.review_id === cur)) {
+          setCurrentReviewID(nextList[0]?.review_id ?? '');
+        }
       }
     },
     {
