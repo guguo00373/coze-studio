@@ -71,6 +71,8 @@ docker compose -f docker-compose.postgres.yml logs -f coze-server
 
 ## 故障排查
 
+> 实际部署中遇到的问题及解决方案汇总，见 [docs/postgresql-deployment-notes.md](../docs/postgresql-deployment-notes.md)。
+
 ### 1. PostgreSQL 连接失败
 
 ```bash

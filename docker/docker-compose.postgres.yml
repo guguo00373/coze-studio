@@ -297,22 +297,7 @@ services:
       ALLOW_REGISTRATION_EMAIL: "admin@qq.com"
       # Listen on IPv4
       LISTEN_ADDR: "0.0.0.0:8888"
-      # Model configuration
-      MODEL_PROTOCOL_0: "openai"
-      MODEL_NAME_0: "Qwen3.6-27B"
-      MODEL_ID_0: "Qwen/Qwen3.6-27B"
-      MODEL_API_KEY_0: "sk-your-key"
-      MODEL_BASE_URL_0: "https://api.siliconflow.cn/v1"
-      BUILTIN_CM_TYPE: "openai"
-      BUILTIN_CM_OPENAI_BASE_URL: "https://api.siliconflow.cn/v1"
-      BUILTIN_CM_OPENAI_API_KEY: "sk-your-key"
-      BUILTIN_CM_OPENAI_MODEL: "Qwen/Qwen3.6-27B"
-      # Embedding configuration
-      EMBEDDING_TYPE: "openai"
-      OPENAI_EMBEDDING_BASE_URL: "https://api.siliconflow.cn/v1"
-      OPENAI_EMBEDDING_MODEL: "Qwen/Qwen3-Embedding-8B"
-      OPENAI_EMBEDDING_API_KEY: "sk-your-key"
-      OPENAI_EMBEDDING_DIMS: "2048"
+      # Model configuration is loaded from .env (env_file) - do not hardcode keys here
     networks:
       - coze-network
     volumes:
