@@ -327,7 +327,14 @@ services:
     command: ['/app/opencoze']
 
   coze-web:
-    image: cozedev/coze-studio-web:latest
+    # Build the web image from local source so frontend fixes (e.g. the
+    # knowledge segment preview doc-switching bug) take effect. Build context
+    # is the repo root because frontend/Dockerfile copies rush.json, common/,
+    # scripts/ and frontend/. Override the tag to rebuild on demand.
+    build:
+      context: ../
+      dockerfile: frontend/Dockerfile
+    image: cozedev/coze-studio-web:2026-08-04
     container_name: coze-web
     restart: always
     ports:
