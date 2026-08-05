@@ -44,3 +44,10 @@ export { WorkspaceEmpty } from './components/workspace-empty';
 
 // constants
 export { highlightFilterStyle } from './constants/filter-style';
+export {
+  getDevelopType,
+  getLibraryTypeFilter,
+  matchesLibraryResource,
+  type DevelopPageKind,
+  type LibraryPageKind,
+} from './pages/resource-page-config';

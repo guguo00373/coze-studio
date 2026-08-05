@@ -17,10 +17,11 @@
 import { useParams } from 'react-router-dom';
 
 import { Develop } from '@coze-studio/workspace-adapter/develop';
+import { type DevelopPageKind } from '@coze-studio/workspace-base';
 
-const Page = () => {
+const Page = ({ pageKind }: { pageKind: DevelopPageKind }) => {
   const { space_id } = useParams();
-  return space_id ? <Develop spaceId={space_id} /> : null;
+  return space_id ? <Develop pageKind={pageKind} spaceId={space_id} /> : null;
 };
 
 export default Page;

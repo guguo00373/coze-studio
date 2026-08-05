@@ -23,6 +23,8 @@ import {
   type ResourceInfo,
 } from '@coze-arch/bot-api/plugin_develop';
 
+import { type LibraryPageKind } from '../resource-page-config';
+
 export interface LibraryEntityConfig {
   /**
    * Resource type filter configuration, passing in the data type of the cascading selector
@@ -47,6 +49,14 @@ export interface LibraryEntityConfig {
    * @Returns render result
    */
   renderCreateMenu?: () => ReactNode;
+
+  /** Direct create action used by a fixed resource page header. */
+  createButton?: {
+    label: string;
+    icon: ReactNode;
+    dataTestId: string;
+    onClick: () => void;
+  };
 
   // #region table configuration
   /**
@@ -92,4 +102,6 @@ export interface BaseLibraryPageProps {
   spaceId: string;
   isPersonalSpace?: boolean;
   entityConfigs: LibraryEntityConfig[];
+  pageKind: LibraryPageKind;
+  pageTitle: string;
 }

@@ -24,7 +24,6 @@ import {
   Select,
   Search,
   Layout,
-  Cascader,
   Space,
 } from '@coze-arch/coze-design';
 import { renderHtmlTitle } from '@coze-arch/bot-utils';
@@ -45,10 +44,11 @@ import { useCachedQueryParams } from './hooks/use-cached-query-params';
 import {
   eventLibraryType,
   getScopeOptions,
-  getStatusOptions,
   LIBRARY_PAGE_SIZE,
 } from './consts';
 import { LibraryHeader } from './components/library-header';
+import { PublishStatusFilter } from './components/publish-status-filter';
+import { matchesLibraryResource } from '../resource-page-config';
 
 import s from './index.module.less';
 
@@ -66,10 +66,14 @@ export const BaseLibraryPage = forwardRef<
   BaseLibraryPageProps
 >(
   // eslint-disable-next-line @coze-arch/max-line-per-function
-  ({ spaceId, isPersonalSpace = true, entityConfigs }, ref) => {
+  (
+    { spaceId, isPersonalSpace = true, entityConfigs, pageKind, pageTitle },
+    ref,
+  ) => {
     const { params, setParams, resetParams, hasFilter, ready } =
       useCachedQueryParams({
         spaceId,
+        pageKind,
       });
 
     const listResp = useInfiniteScroll<ListData>(
@@ -81,23 +85,35 @@ export const BaseLibraryPage = forwardRef<
             hasMore: false,
           };
         }
-        // Allow business to customize request parameters
-        const resp = await PluginDevelopApi.LibraryResourceList(
-          entityConfigs.reduce<LibraryResourceListRequest>(
-            (res, config) => config.parseParams?.(res) ?? res,
-            {
-              ...params,
-              cursor: prev?.nextCursorId,
-              space_id: spaceId,
-              size: LIBRARY_PAGE_SIZE,
-            },
-          ),
-        );
-        return {
-          list: resp?.resource_list || [],
-          nextCursorId: resp?.cursor,
-          hasMore: !!resp?.has_more,
-        };
+        let cursor = prev?.nextCursorId;
+        while (true) {
+          // Allow business to customize request parameters
+          const resp = await PluginDevelopApi.LibraryResourceList(
+            entityConfigs.reduce<LibraryResourceListRequest>(
+              (res, config) => config.parseParams?.(res) ?? res,
+              {
+                ...params,
+                cursor,
+                space_id: spaceId,
+                size: LIBRARY_PAGE_SIZE,
+              },
+            ),
+          );
+          const list = (resp?.resource_list || []).filter(resource =>
+            matchesLibraryResource(pageKind, resource),
+          );
+          const nextCursorId = resp?.cursor;
+          const hasMore = !!resp?.has_more;
+          const cursorAdvanced = nextCursorId !== cursor;
+          if (list.length || !hasMore || !cursorAdvanced) {
+            return {
+              list,
+              nextCursorId,
+              hasMore: hasMore && cursorAdvanced,
+            };
+          }
+          cursor = nextCursorId;
+        }
       },
       {
         reloadDeps: [params, spaceId],
@@ -114,55 +130,18 @@ export const BaseLibraryPage = forwardRef<
       isPersonalSpace,
     });
 
-    const typeFilterData = [
-      { label: I18n.t('library_filter_tags_all_types'), value: -1 },
-      ...entityConfigs.map(item => item.typeFilter).filter(filter => !!filter),
-    ];
     const scopeOptions = getScopeOptions();
-    const statusOptions = getStatusOptions();
 
     return (
       <Layout
         className={s['layout-content']}
-        title={renderHtmlTitle(I18n.t('navigation_workspace_library'))}
+        title={renderHtmlTitle(pageTitle)}
       >
         <Layout.Header className={classNames(s['layout-header'], 'pb-0')}>
           <div className="w-full">
-            <LibraryHeader entityConfigs={entityConfigs} />
+            <LibraryHeader entityConfigs={entityConfigs} title={pageTitle} />
             <div className="flex items-center justify-between">
               <Space>
-                <Cascader
-                  data-testid="workspace.library.filter.type"
-                  className={s.cascader}
-                  style={
-                    params?.res_type_filter?.[0] !== -1
-                      ? highlightFilterStyle
-                      : {}
-                  }
-                  dropdownClassName="[&_.semi-cascader-option-lists]:h-fit"
-                  showClear={false}
-                  value={params.res_type_filter}
-                  treeData={typeFilterData}
-                  onChange={v => {
-                    const typeFilter = typeFilterData.find(
-                      item =>
-                        item.value === ((v as Array<number>)?.[0] as number),
-                    );
-                    sendTeaEvent(EVENT_NAMES.workspace_action_front, {
-                      space_id: spaceId,
-                      space_type: isPersonalSpace ? 'personal' : 'teamspace',
-                      tab_name: 'library',
-                      action: 'filter',
-                      filter_type: 'types',
-                      filter_name: typeFilter?.filterName ?? typeFilter?.label,
-                    });
-
-                    setParams(prev => ({
-                      ...prev,
-                      res_type_filter: v as Array<number>,
-                    }));
-                  }}
-                />
                 {!isPersonalSpace ? (
                   <Select
                     data-testid="workspace.library.filter.user"
@@ -193,32 +172,20 @@ export const BaseLibraryPage = forwardRef<
                     }}
                   />
                 ) : null}
-                <Select
-                  data-testid="workspace.library.filter.status"
-                  className={s.select}
-                  style={
-                    params?.publish_status_filter !== 0
-                      ? highlightFilterStyle
-                      : {}
-                  }
-                  showClear={false}
+                <PublishStatusFilter
                   value={params.publish_status_filter}
-                  optionList={statusOptions}
-                  onChange={v => {
+                  onChange={(value, label) => {
                     sendTeaEvent(EVENT_NAMES.workspace_action_front, {
                       space_id: spaceId,
                       space_type: isPersonalSpace ? 'personal' : 'teamspace',
                       tab_name: 'library',
                       action: 'filter',
                       filter_type: 'status',
-                      filter_name: statusOptions.find(
-                        item =>
-                          item.value === ((v as Array<number>)?.[0] as number),
-                      )?.label,
+                      filter_name: label,
                     });
                     setParams(prev => ({
                       ...prev,
-                      publish_status_filter: v as number,
+                      publish_status_filter: value,
                     }));
                   }}
                 />

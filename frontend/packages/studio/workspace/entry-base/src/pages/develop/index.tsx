@@ -31,7 +31,6 @@ export { DevelopCustomPublishStatus, DevelopCustomTypeStatus } from './type';
 export {
   isPublishStatus,
   isSearchScopeEnum,
-  isRecentOpen,
 } from './page-utils/predicate';
 export {
   getPublishRequestParam,
@@ -55,7 +54,9 @@ export { useGlobalEventListeners } from './hooks/use-global-event-listeners';
 export { useProjectCopyPolling } from './hooks/use-project-copy-polling';
 export { useCachedQueryParams } from './hooks/use-cached-query-params';
 export { BotCard } from './components/bot-card';
+export { DevelopPublishStatusFilter } from './components/publish-status-filter';
 
 export interface DevelopProps {
   spaceId: string;
+  pageKind: 'agent' | 'app';
 }

@@ -17,10 +17,13 @@
 import { useParams } from 'react-router-dom';
 
 import { LibraryPage } from '@coze-studio/workspace-adapter/library';
+import { type LibraryPageKind } from '@coze-studio/workspace-base';
 
-const Page = () => {
+const Page = ({ pageKind }: { pageKind: LibraryPageKind }) => {
   const { space_id } = useParams();
-  return space_id ? <LibraryPage spaceId={space_id} /> : null;
+  return space_id ? (
+    <LibraryPage pageKind={pageKind} spaceId={space_id} />
+  ) : null;
 };
 
 export default Page;

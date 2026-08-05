@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { parse } from 'qs';
 import { useUpdateEffect } from 'ahooks';
@@ -25,6 +25,10 @@ import { safeJSONParse } from '@coze-agent-ide/space-bot/util';
 import { compareObjects } from '@/utils';
 
 import { initialParam, type QueryParams } from '../consts';
+import {
+  getLibraryTypeFilter,
+  type LibraryPageKind,
+} from '../../resource-page-config';
 
 /**
  * Get search parameters from url query, highest priority, higher than LS cache
@@ -70,10 +74,27 @@ const getDefaultFilterParams = async () => {
   return defaultFilterParams;
 };
 
-export const useCachedQueryParams = ({ spaceId }: { spaceId: string }) => {
+export const useCachedQueryParams = ({
+  spaceId,
+  pageKind,
+}: {
+  spaceId: string;
+  pageKind: LibraryPageKind;
+}) => {
+  const fixedTypeFilter = useMemo(
+    () => getLibraryTypeFilter(pageKind),
+    [pageKind],
+  );
+  const pageInitialParams = useMemo(
+    () => ({
+      ...initialParam,
+      res_type_filter: fixedTypeFilter,
+    }),
+    [fixedTypeFilter],
+  );
   const [ready, setReady] = useState(false);
   const [params, setParams] = useState<QueryParams>(initialParam);
-  const hasFilter = !compareObjects(params, initialParam, [
+  const hasFilter = !compareObjects(params, pageInitialParams, [
     'res_type_filter',
     'user_filter',
     'publish_status_filter',
@@ -87,11 +108,12 @@ export const useCachedQueryParams = ({ spaceId }: { spaceId: string }) => {
       setParams(p => ({
         ...p,
         ...filters,
+        res_type_filter: fixedTypeFilter,
         cursor: '', // Filter, reset to empty when refreshing
       }));
       setReady(true);
     });
-  }, [spaceId]);
+  }, [spaceId, fixedTypeFilter]);
 
   useUpdateEffect(() => {
     /** When the filter conditions change, take the appropriate key and store it locally */
@@ -107,7 +129,7 @@ export const useCachedQueryParams = ({ spaceId }: { spaceId: string }) => {
   }, [params]);
 
   const resetParams = () => {
-    setParams(initialParam);
+    setParams(pageInitialParams);
   };
 
   return {

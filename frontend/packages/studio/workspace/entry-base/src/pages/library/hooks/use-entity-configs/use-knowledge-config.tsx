@@ -212,6 +212,12 @@ export const useKnowledgeConfig: UseEntityConfigHook = ({
     modals: <>{createKnowledgeModal}</>,
     config: {
       typeFilter: getTypeFilters(),
+      createButton: {
+        label: I18n.t('library_resource_type_knowledge'),
+        icon: <IconCozKnowledge />,
+        dataTestId: 'workspace.library.header.create.knowledge',
+        onClick: openCreateKnowledgeModal,
+      },
       renderCreateMenu: () => (
         <Menu.Item
           data-testid="workspace.library.header.create.knowledge"

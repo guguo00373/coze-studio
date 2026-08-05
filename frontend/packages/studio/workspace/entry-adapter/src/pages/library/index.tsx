@@ -24,8 +24,14 @@ import {
   usePromptConfig,
   useKnowledgeConfig,
 } from '@coze-studio/workspace-base/library';
+import { type LibraryPageKind } from '@coze-studio/workspace-base';
+import { WorkflowMode } from '@coze-arch/idl/plugin_develop';
+import { I18n } from '@coze-arch/i18n';
 
-export const LibraryPage: FC<{ spaceId: string }> = ({ spaceId }) => {
+export const LibraryPage: FC<{
+  spaceId: string;
+  pageKind: LibraryPageKind;
+}> = ({ spaceId, pageKind }) => {
   const basePageRef = useRef<{ reloadList: () => void }>(null);
   const configCommonParams = {
     spaceId,
@@ -36,7 +42,13 @@ export const LibraryPage: FC<{ spaceId: string }> = ({ spaceId }) => {
   const { config: pluginConfig, modals: pluginModals } =
     usePluginConfig(configCommonParams);
   const { config: workflowConfig, modals: workflowModals } =
-    useWorkflowConfig(configCommonParams);
+    useWorkflowConfig({
+      ...configCommonParams,
+      workflowMode:
+        pageKind === 'chatflow'
+          ? WorkflowMode.ChatFlow
+          : WorkflowMode.Workflow,
+    });
   const { config: knowledgeConfig, modals: knowledgeModals } =
     useKnowledgeConfig(configCommonParams);
   const { config: promptConfig, modals: promptModals } =
@@ -44,18 +56,45 @@ export const LibraryPage: FC<{ spaceId: string }> = ({ spaceId }) => {
   const { config: databaseConfig, modals: databaseModals } =
     useDatabaseConfig(configCommonParams);
 
+  const pageConfig = {
+    plugin: {
+      config: pluginConfig,
+      title: I18n.t('library_resource_type_plugin'),
+    },
+    workflow: {
+      config: workflowConfig,
+      title: I18n.t('library_resource_type_workflow'),
+    },
+    chatflow: {
+      config: workflowConfig,
+      title: I18n.t('wf_chatflow_76'),
+    },
+    knowledge: {
+      config: knowledgeConfig,
+      title: I18n.t('library_resource_type_knowledge'),
+    },
+    prompt: {
+      config: promptConfig,
+      title: I18n.t('library_resource_type_prompt'),
+    },
+    database: {
+      config: databaseConfig,
+      title: I18n.t('new_db_001'),
+    },
+  } satisfies Record<
+    LibraryPageKind,
+    { config: typeof pluginConfig; title: string }
+  >;
+  const { config, title } = pageConfig[pageKind];
+
   return (
     <>
       <BaseLibraryPage
         spaceId={spaceId}
+        pageKind={pageKind}
+        pageTitle={title}
         ref={basePageRef}
-        entityConfigs={[
-          pluginConfig,
-          workflowConfig,
-          knowledgeConfig,
-          promptConfig,
-          databaseConfig,
-        ]}
+        entityConfigs={[config]}
       />
       {pluginModals}
       {workflowModals}

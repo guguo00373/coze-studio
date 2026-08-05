@@ -61,7 +61,7 @@ export const getStatusOptions = () => [
     value: PublishStatus.Published,
   },
   {
-    label: I18n.t('library_filter_tags_unpublished'),
+    label: I18n.t('Unpublished_1'),
     value: PublishStatus.UnPublished,
   },
 ];

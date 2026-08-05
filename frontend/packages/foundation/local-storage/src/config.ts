@@ -22,6 +22,8 @@ export const LOCAL_STORAGE_CACHE_KEYS = [
   'workspace-spaceId',
   'workspace-subMenu',
   'workspace-develop-filters',
+  'workspace-agent-filters',
+  'workspace-app-filters',
   'workspace-library-filters',
   'workspace-ocean-project-filters',
   'coze-home-session-area-hidden-key',

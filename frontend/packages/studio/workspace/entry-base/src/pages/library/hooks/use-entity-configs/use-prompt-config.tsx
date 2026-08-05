@@ -86,6 +86,18 @@ export const usePromptConfig: UseEntityConfigHook = ({
       },
     });
 
+  const handleCreatePrompt = () => {
+    sendTeaEvent(EVENT_NAMES.widget_create_click, {
+      source: 'menu_bar',
+      workspace_type: isPersonalSpace
+        ? 'personal_workspace'
+        : 'team_workspace',
+    });
+    openCreatePrompt({
+      mode: 'create',
+    });
+  };
+
   // delete
   const { run: delPrompt } = useRequest(
     (promptId: string) =>
@@ -113,21 +125,17 @@ export const usePromptConfig: UseEntityConfigHook = ({
         label: I18n.t('library_resource_type_prompt'),
         value: ResType.Prompt,
       },
+      createButton: {
+        label: I18n.t('creat_new_prompt_prompt'),
+        icon: <IconCozLightbulb />,
+        dataTestId: 'workspace.library.header.create.prompt',
+        onClick: handleCreatePrompt,
+      },
       renderCreateMenu: () => (
         <Menu.Item
           data-testid="workspace.library.header.create.prompt"
           icon={<IconCozLightbulb />}
-          onClick={() => {
-            sendTeaEvent(EVENT_NAMES.widget_create_click, {
-              source: 'menu_bar',
-              workspace_type: isPersonalSpace
-                ? 'personal_workspace'
-                : 'team_workspace',
-            });
-            openCreatePrompt({
-              mode: 'create',
-            });
-          }}
+          onClick={handleCreatePrompt}
         >
           {I18n.t('creat_new_prompt_prompt')}
         </Menu.Item>

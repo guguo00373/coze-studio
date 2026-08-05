@@ -24,8 +24,6 @@ import {
   highlightFilterStyle,
   WorkspaceEmpty,
   DevelopCustomPublishStatus,
-  isPublishStatus,
-  isRecentOpen,
   isSearchScopeEnum,
   getPublishRequestParam,
   getTypeRequestParams,
@@ -33,8 +31,7 @@ import {
   isFilterHighlight,
   CREATOR_FILTER_OPTIONS,
   FILTER_PARAMS_DEFAULT,
-  STATUS_FILTER_OPTIONS,
-  TYPE_FILTER_OPTIONS,
+  DevelopPublishStatusFilter,
   BotCard,
   Content,
   Header,
@@ -52,6 +49,7 @@ import {
   useProjectCopyPolling,
   useCardActions,
 } from '@coze-studio/workspace-base/develop';
+import { getDevelopType } from '@coze-studio/workspace-base';
 import { useSpaceStore } from '@coze-foundation/space-store-adapter';
 import {
   IntelligenceType,
@@ -70,20 +68,16 @@ import {
 import { EVENT_NAMES, sendTeaEvent } from '@coze-arch/bot-tea';
 import { SpaceType } from '@coze-arch/bot-api/developer_api';
 
-export const Develop: FC<DevelopProps> = ({ spaceId }) => {
+export const Develop: FC<DevelopProps> = ({ spaceId, pageKind }) => {
   const isPersonal = useSpaceStore(
     state => state.space.space_type === SpaceType.Personal,
   );
 
   // Keyword Search & Filtering
   const [filterParams, setFilterParams, debouncedSetSearchValue] =
-    useCachedQueryParams();
+    useCachedQueryParams({ fixedSearchType: getDevelopType(pageKind) });
 
-  const {
-    isIntelligenceTypeFilterHighlight,
-    isOwnerFilterHighlight,
-    isPublishAndOpenFilterHighlight,
-  } = isFilterHighlight(filterParams);
+  const { isOwnerFilterHighlight } = isFilterHighlight(filterParams);
 
   const {
     listResp: { loading, data, loadingMore, mutate, noMore, reload },
@@ -96,12 +90,12 @@ export const Develop: FC<DevelopProps> = ({ spaceId }) => {
         type: filterParams.searchType,
       }),
       hasPublished: getPublishRequestParam(filterParams.isPublish),
-      recentlyOpen: filterParams.recentlyOpen,
       searchScope: filterParams.searchScope,
       // Fixed value, from historical code
-      orderBy: filterParams.isPublish
-        ? search.OrderBy.PublishTime
-        : search.OrderBy.UpdateTime,
+      orderBy:
+        filterParams.isPublish === DevelopCustomPublishStatus.Publish
+          ? search.OrderBy.PublishTime
+          : search.OrderBy.UpdateTime,
     },
   });
 
@@ -149,49 +143,26 @@ export const Develop: FC<DevelopProps> = ({ spaceId }) => {
       <Layout>
         <Header>
           <HeaderTitle>
-            <span>{I18n.t('workspace_develop')}</span>
+            <span>
+              {I18n.t(
+                pageKind === 'agent'
+                  ? 'filter_develop_agent'
+                  : 'filter_develop_project',
+              )}
+            </span>
           </HeaderTitle>
           <HeaderActions>
-            <Button icon={<IconCozPlus />} onClick={actions.createIntelligence}>
+            <Button
+              icon={<IconCozPlus />}
+              data-testid={`workspace.${pageKind}.header.create`}
+              onClick={actions.createIntelligence}
+            >
               {I18n.t('workspace_create')}
             </Button>
           </HeaderActions>
         </Header>
         <SubHeader>
           <SubHeaderFilters>
-            <Select
-              className="min-w-[128px]"
-              style={
-                isIntelligenceTypeFilterHighlight ? highlightFilterStyle : {}
-              }
-              value={filterParams.searchType}
-              onChange={val => {
-                setFilterParams(prev => ({
-                  ...prev,
-                  searchType:
-                    val as (typeof TYPE_FILTER_OPTIONS)[number]['value'],
-                }));
-
-                // Tea event tracking
-                sendTeaEvent(EVENT_NAMES.workspace_action_front, {
-                  space_id: spaceId,
-                  space_type: isPersonal ? 'personal' : 'teamspace',
-                  tab_name: 'develop',
-                  action: 'filter',
-                  filter_type: 'types',
-                  filter_name: I18n.t(
-                    TYPE_FILTER_OPTIONS.find(opt => opt.value === val)
-                      ?.labelI18NKey as I18nKeysNoOptionsType,
-                  ),
-                });
-              }}
-            >
-              {TYPE_FILTER_OPTIONS.map(opt => (
-                <Select.Option key={opt.value} value={opt.value}>
-                  {I18n.t(opt.labelI18NKey)}
-                </Select.Option>
-              ))}
-            </Select>
             {!isPersonal ? (
               /**
                * Search Scope
@@ -206,20 +177,10 @@ export const Develop: FC<DevelopProps> = ({ spaceId }) => {
                   if (!isSearchScopeEnum(val)) {
                     return;
                   }
-                  setFilterParams(p => {
-                    if (val === SearchScope.CreateByMe && p.recentlyOpen) {
-                      return {
-                        ...p,
-                        recentlyOpen: false,
-                        isPublish: DevelopCustomPublishStatus.All,
-                        searchScope: val,
-                      };
-                    }
-                    return {
-                      ...p,
-                      searchScope: val,
-                    };
-                  });
+                  setFilterParams(p => ({
+                    ...p,
+                    searchScope: val,
+                  }));
                   // Tea event tracking
                   sendTeaEvent(EVENT_NAMES.workspace_action_front, {
                     space_id: spaceId,
@@ -241,54 +202,26 @@ export const Develop: FC<DevelopProps> = ({ spaceId }) => {
                 ))}
               </Select>
             ) : null}
-            {/*
-              all
-              Published
-              Recently opened
-            */}
-            <Select
-              className="min-w-[128px]"
-              style={
-                isPublishAndOpenFilterHighlight ? highlightFilterStyle : {}
-              }
-              value={
-                filterParams.recentlyOpen
-                  ? 'recentOpened'
-                  : filterParams.isPublish
-              }
-              onChange={val => {
+            <DevelopPublishStatusFilter
+              value={filterParams.isPublish}
+              onChange={(value, label) => {
                 setFilterParams(p => ({
                   ...p,
-                  searchScope: SearchScope.All,
-                  recentlyOpen: isRecentOpen(val),
-                  isPublish: isPublishStatus(val)
-                    ? val
-                    : DevelopCustomPublishStatus.All,
+                  isPublish: value,
                 }));
-                // Tea event tracking
                 sendTeaEvent(EVENT_NAMES.workspace_action_front, {
                   space_id: spaceId,
                   space_type: isPersonal ? 'personal' : 'teamspace',
                   tab_name: 'develop',
                   action: 'filter',
                   filter_type: 'status',
-                  filter_name: I18n.t(
-                    STATUS_FILTER_OPTIONS.find(opt => opt.value === val)
-                      ?.labelI18NKey as I18nKeysNoOptionsType,
-                  ),
+                  filter_name: label,
                 });
               }}
-            >
-              {STATUS_FILTER_OPTIONS.map(opt => (
-                <Select.Option key={opt.value} value={opt.value}>
-                  {I18n.t(opt.labelI18NKey)}
-                </Select.Option>
-              ))}
-            </Select>
+            />
           </SubHeaderFilters>
           <SubHeaderSearch>
             <Search
-              disabled={filterParams.recentlyOpen}
               showClear={true}
               className="w-[200px]"
               style={filterParams.searchValue ? highlightFilterStyle : {}}
@@ -354,9 +287,8 @@ export const Develop: FC<DevelopProps> = ({ spaceId }) => {
                       });
                     }}
                     timePrefixType={
-                      filterParams.recentlyOpen
-                        ? 'recentOpen'
-                        : filterParams.isPublish
+                      filterParams.isPublish ===
+                      DevelopCustomPublishStatus.Publish
                         ? 'publish'
                         : 'edit'
                     }
@@ -368,11 +300,15 @@ export const Develop: FC<DevelopProps> = ({ spaceId }) => {
             {!data?.list?.length && !loading ? (
               <WorkspaceEmpty
                 onClear={() => {
-                  setFilterParams(FILTER_PARAMS_DEFAULT);
+                  setFilterParams({
+                    ...FILTER_PARAMS_DEFAULT,
+                    searchType: getDevelopType(pageKind),
+                  });
                 }}
                 hasFilter={
                   !isEqualDefaultFilterParams({
                     filterParams,
+                    defaultSearchType: getDevelopType(pageKind),
                   })
                 }
               />

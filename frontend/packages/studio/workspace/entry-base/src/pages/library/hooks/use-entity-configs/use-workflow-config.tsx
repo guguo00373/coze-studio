@@ -31,11 +31,14 @@ const defaultIconMap: { [key in ResType]?: string } = {
   [ResType.Imageflow]: ImageFlowDefaultIcon,
 };
 
-export const useWorkflowConfig: UseEntityConfigHook = ({
+export const useWorkflowConfig = ({
   spaceId,
   reloadList,
   getCommonActions,
-}) => {
+  workflowMode,
+}: Parameters<UseEntityConfigHook>[0] & {
+  workflowMode: WorkflowMode.Workflow | WorkflowMode.ChatFlow;
+}): ReturnType<UseEntityConfigHook> => {
   const userInfo = useUserInfo();
   const {
     workflowResourceModals,
@@ -53,12 +56,39 @@ export const useWorkflowConfig: UseEntityConfigHook = ({
     modals: workflowResourceModals,
     config: {
       typeFilter: {
-        label: I18n.t('library_resource_type_workflow'),
+        label: I18n.t(
+          workflowMode === WorkflowMode.ChatFlow
+            ? 'wf_chatflow_76'
+            : 'library_resource_type_workflow',
+        ),
         value: ResType.Workflow,
+      },
+      createButton: {
+        label: I18n.t(
+          workflowMode === WorkflowMode.ChatFlow
+            ? 'wf_chatflow_76'
+            : 'library_resource_type_workflow',
+        ),
+        icon:
+          workflowMode === WorkflowMode.ChatFlow ? (
+            <IconCozChat />
+          ) : (
+            <IconCozWorkflow />
+          ),
+        dataTestId:
+          workflowMode === WorkflowMode.ChatFlow
+            ? 'workspace.library.header.create.chatflow'
+            : 'workspace.library.header.create.workflow',
+        onClick: () => {
+          openCreateModal(workflowMode);
+        },
       },
       parseParams: params => {
         // After the workflow image stream is merged, the selected workflow needs to also pull out the image stream
-        if (params?.res_type_filter?.[0] === ResType.Workflow) {
+        if (
+          workflowMode === WorkflowMode.Workflow &&
+          params?.res_type_filter?.[0] === ResType.Workflow
+        ) {
           return {
             ...params,
             is_get_imageflow: true,
@@ -66,8 +96,8 @@ export const useWorkflowConfig: UseEntityConfigHook = ({
         }
         return params;
       },
-      renderCreateMenu: () => (
-        <>
+      renderCreateMenu: () =>
+        workflowMode === WorkflowMode.Workflow ? (
           <Menu.Item
             data-testid="workspace.library.header.create.workflow"
             icon={<IconCozWorkflow />}
@@ -77,6 +107,7 @@ export const useWorkflowConfig: UseEntityConfigHook = ({
           >
             {I18n.t('library_resource_type_workflow')}
           </Menu.Item>
+        ) : (
           <Menu.Item
             data-testid="workspace.library.header.create.chatflow"
             icon={<IconCozChat />}
@@ -86,9 +117,11 @@ export const useWorkflowConfig: UseEntityConfigHook = ({
           >
             {I18n.t('wf_chatflow_76')}
           </Menu.Item>
-        </>
-      ),
-      target: [ResType.Workflow, ResType.Imageflow],
+        ),
+      target:
+        workflowMode === WorkflowMode.Workflow
+          ? [ResType.Workflow, ResType.Imageflow]
+          : [ResType.Workflow],
       onItemClick: handleWorkflowResourceClick,
       renderItem: item => (
         <BaseLibraryItem

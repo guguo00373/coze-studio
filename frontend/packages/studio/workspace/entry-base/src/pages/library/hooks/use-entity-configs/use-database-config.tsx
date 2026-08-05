@@ -74,6 +74,12 @@ export const useDatabaseConfig: UseEntityConfigHook = ({
         label: I18n.t('new_db_001'),
         value: ResType.Database,
       },
+      createButton: {
+        label: I18n.t('new_db_001'),
+        icon: <IconCozDatabase />,
+        dataTestId: 'workspace.library.header.create.card',
+        onClick: openCreateDatabaseModal,
+      },
       renderCreateMenu: () => (
         <Menu.Item
           data-testid="workspace.library.header.create.card"

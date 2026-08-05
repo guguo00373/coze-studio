@@ -71,6 +71,14 @@ export const usePluginConfig: UseEntityConfigHook = ({
         label: I18n.t('library_resource_type_plugin'),
         value: ResType.Plugin,
       },
+      createButton: {
+        label: I18n.t('library_resource_type_plugin'),
+        icon: <IconCozPlugin />,
+        dataTestId: 'workspace.library.header.create.plugin',
+        onClick: () => {
+          setShowFormPluginModel(true);
+        },
+      },
       renderCreateMenu: () => (
         <Menu.Item
           data-testid="workspace.library.header.create.plugin"

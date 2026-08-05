@@ -30,7 +30,5 @@ export function isPublishStatus(
   return statusList.includes(val);
 }
 
-export const isRecentOpen = (val: unknown) => val === 'recentOpened';
-
 export const isSearchScopeEnum = (val: unknown): val is SearchScope =>
   val === SearchScope.All || val === SearchScope.CreateByMe;

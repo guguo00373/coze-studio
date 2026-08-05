@@ -21,8 +21,18 @@ import { useRouteConfig } from '@coze-arch/bot-hooks';
 import {
   IconCozBot,
   IconCozBotFill,
+  IconCozCard,
+  IconCozChat,
+  IconCozChatFill,
+  IconCozDatabase,
+  IconCozDatabaseFill,
   IconCozKnowledge,
   IconCozKnowledgeFill,
+  IconCozLightbulb,
+  IconCozLightbulbFill,
+  IconCozPlugin,
+  IconCozPluginFill,
+  IconCozWorkflow,
 } from '@coze-arch/coze-design/icons';
 import { Space, Avatar, Typography } from '@coze-arch/coze-design';
 
@@ -37,16 +47,58 @@ export const WorkspaceSubMenu = () => {
     {
       icon: <IconCozBot />,
       activeIcon: <IconCozBotFill />,
-      title: () => I18n.t('navigation_workspace_develop', {}, 'Develop'),
-      path: SpaceSubModuleEnum.DEVELOP,
-      dataTestId: 'navigation_workspace_develop',
+      title: () => I18n.t('filter_develop_agent', {}, 'Agent'),
+      path: SpaceSubModuleEnum.AGENT,
+      dataTestId: 'navigation_workspace_agent',
+    },
+    {
+      icon: <IconCozCard />,
+      activeIcon: <IconCozCard />,
+      title: () => I18n.t('filter_develop_project', {}, 'App'),
+      path: SpaceSubModuleEnum.APP,
+      dataTestId: 'navigation_workspace_app',
+    },
+    {
+      icon: <IconCozPlugin />,
+      activeIcon: <IconCozPluginFill />,
+      title: () => I18n.t('library_resource_type_plugin', {}, 'Plugin'),
+      path: SpaceSubModuleEnum.PLUGIN,
+      dataTestId: 'navigation_workspace_plugin',
+    },
+    {
+      icon: <IconCozWorkflow />,
+      activeIcon: <IconCozWorkflow />,
+      title: () => I18n.t('library_resource_type_workflow', {}, 'Workflow'),
+      path: SpaceSubModuleEnum.WORKFLOW,
+      dataTestId: 'navigation_workspace_workflow',
+    },
+    {
+      icon: <IconCozChat />,
+      activeIcon: <IconCozChatFill />,
+      title: () => I18n.t('wf_chatflow_76', {}, 'Chatflow'),
+      path: SpaceSubModuleEnum.CHATFLOW,
+      dataTestId: 'navigation_workspace_chatflow',
     },
     {
       icon: <IconCozKnowledge />,
       activeIcon: <IconCozKnowledgeFill />,
-      title: () => I18n.t('navigation_workspace_library', {}, 'Library'),
-      path: SpaceSubModuleEnum.LIBRARY,
-      dataTestId: 'navigation_workspace_library',
+      title: () => I18n.t('library_resource_type_knowledge', {}, 'Knowledge'),
+      path: SpaceSubModuleEnum.KNOWLEDGE,
+      dataTestId: 'navigation_workspace_knowledge',
+    },
+    {
+      icon: <IconCozLightbulb />,
+      activeIcon: <IconCozLightbulbFill />,
+      title: () => I18n.t('library_resource_type_prompt', {}, 'Prompt'),
+      path: SpaceSubModuleEnum.PROMPT,
+      dataTestId: 'navigation_workspace_prompt',
+    },
+    {
+      icon: <IconCozDatabase />,
+      activeIcon: <IconCozDatabaseFill />,
+      title: () => I18n.t('new_db_001', {}, 'Database'),
+      path: SpaceSubModuleEnum.DATABASE,
+      dataTestId: 'navigation_workspace_database',
     },
   ];
 

@@ -124,15 +124,21 @@ export const router: ReturnType<typeof createBrowserRouter> =
               children: [
                 {
                   index: true,
-                  element: <Navigate to="develop" replace />,
+                  element: <Navigate to="agent" replace />,
                 },
 
-                // Project Development
                 {
-                  path: 'develop',
-                  Component: Develop,
+                  path: 'agent',
+                  element: <Develop pageKind="agent" />,
                   loader: () => ({
-                    subMenuKey: SpaceSubModuleEnum.DEVELOP,
+                    subMenuKey: SpaceSubModuleEnum.AGENT,
+                  }),
+                },
+                {
+                  path: 'app',
+                  element: <Develop pageKind="app" />,
+                  loader: () => ({
+                    subMenuKey: SpaceSubModuleEnum.APP,
                   }),
                 },
 
@@ -184,28 +190,60 @@ export const router: ReturnType<typeof createBrowserRouter> =
                   }),
                 },
 
-                // resource library
                 {
-                  path: 'library',
-                  Component: Library,
+                  path: 'plugin',
+                  element: <Library pageKind="plugin" />,
                   loader: () => ({
-                    subMenuKey: SpaceSubModuleEnum.LIBRARY,
+                    subMenuKey: SpaceSubModuleEnum.PLUGIN,
+                  }),
+                },
+                {
+                  path: 'workflow',
+                  element: <Library pageKind="workflow" />,
+                  loader: () => ({
+                    subMenuKey: SpaceSubModuleEnum.WORKFLOW,
+                  }),
+                },
+                {
+                  path: 'chatflow',
+                  element: <Library pageKind="chatflow" />,
+                  loader: () => ({
+                    subMenuKey: SpaceSubModuleEnum.CHATFLOW,
+                  }),
+                },
+                {
+                  path: 'knowledge',
+                  element: <Library pageKind="knowledge" />,
+                  loader: () => ({
+                    subMenuKey: SpaceSubModuleEnum.KNOWLEDGE,
+                  }),
+                },
+                {
+                  path: 'prompt',
+                  element: <Library pageKind="prompt" />,
+                  loader: () => ({
+                    subMenuKey: SpaceSubModuleEnum.PROMPT,
+                  }),
+                },
+                {
+                  path: 'database',
+                  element: <Library pageKind="database" />,
+                  loader: () => ({
+                    subMenuKey: SpaceSubModuleEnum.DATABASE,
                   }),
                 },
 
                 // Knowledge Base Resources
                 {
-                  path: 'knowledge',
-                  children: [
-                    {
-                      path: ':dataset_id',
-                      element: <KnowledgePreview />,
-                    },
-                    {
-                      path: ':dataset_id/upload',
-                      element: <KnowledgeUpload />,
-                    },
-                  ],
+                  path: 'knowledge/:dataset_id',
+                  element: <KnowledgePreview />,
+                  loader: () => ({
+                    pageModeByQuery: true,
+                  }),
+                },
+                {
+                  path: 'knowledge/:dataset_id/upload',
+                  element: <KnowledgeUpload />,
                   loader: () => ({
                     pageModeByQuery: true,
                   }),
@@ -213,13 +251,8 @@ export const router: ReturnType<typeof createBrowserRouter> =
 
                 // database resources
                 {
-                  path: 'database',
-                  children: [
-                    {
-                      path: ':table_id',
-                      element: <DatabaseDetail />,
-                    },
-                  ],
+                  path: 'database/:table_id',
+                  element: <DatabaseDetail />,
                   loader: () => ({
                     showMobileTips: true,
                     pageModeByQuery: true,

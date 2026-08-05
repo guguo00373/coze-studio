@@ -43,5 +43,4 @@ export interface FilterParamsType {
   searchValue: string;
   isPublish: DevelopCustomPublishStatus;
   searchType: DevelopCustomTypeStatus;
-  recentlyOpen: boolean | undefined;
 }

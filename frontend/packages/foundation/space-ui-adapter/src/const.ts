@@ -15,6 +15,12 @@
  */
 
 export enum SpaceSubModuleEnum {
-  DEVELOP = 'develop',
-  LIBRARY = 'library',
+  AGENT = 'agent',
+  APP = 'app',
+  PLUGIN = 'plugin',
+  WORKFLOW = 'workflow',
+  CHATFLOW = 'chatflow',
+  KNOWLEDGE = 'knowledge',
+  PROMPT = 'prompt',
+  DATABASE = 'database',
 }

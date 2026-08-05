@@ -42,8 +42,8 @@ export const STATUS_FILTER_OPTIONS = [
     labelI18NKey: 'Published_1',
   },
   {
-    value: 'recentOpened',
-    labelI18NKey: 'filter_develop_recent_opened',
+    value: DevelopCustomPublishStatus.NoPublish,
+    labelI18NKey: 'Unpublished_1',
   },
 ] as const;
 
@@ -67,5 +67,16 @@ export const FILTER_PARAMS_DEFAULT: FilterParamsType = {
   searchValue: '',
   isPublish: DevelopCustomPublishStatus.All,
   searchType: DevelopCustomTypeStatus.All,
-  recentlyOpen: undefined,
+};
+
+export const getDevelopFilterCacheKey = (
+  fixedSearchType: DevelopCustomTypeStatus,
+) => {
+  if (fixedSearchType === DevelopCustomTypeStatus.Agent) {
+    return 'workspace-agent-filters';
+  }
+  if (fixedSearchType === DevelopCustomTypeStatus.Project) {
+    return 'workspace-app-filters';
+  }
+  return 'workspace-develop-filters';
 };

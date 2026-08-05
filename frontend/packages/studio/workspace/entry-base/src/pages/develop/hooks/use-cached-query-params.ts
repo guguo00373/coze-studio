@@ -23,51 +23,71 @@ import { EVENT_NAMES, sendTeaEvent } from '@coze-arch/bot-tea';
 import { localStorageService } from '@coze-foundation/local-storage';
 
 import { type FilterParamsType } from '../type';
-import { FILTER_PARAMS_DEFAULT } from '../develop-filter-options';
+import {
+  FILTER_PARAMS_DEFAULT,
+  getDevelopFilterCacheKey,
+} from '../develop-filter-options';
 
 const isPersistentFilterParamsType = (
   params: unknown,
 ): params is Partial<FilterParamsType> => isObject(params);
 
-const getDefaultFilterParams = async () => {
+const getDefaultFilterParams = async (
+  fixedSearchType: FilterParamsType['searchType'],
+) => {
   const localFilterParams = await localStorageService.getValueSync(
-    'workspace-develop-filters',
+    getDevelopFilterCacheKey(fixedSearchType),
   );
   if (!localFilterParams) {
-    return FILTER_PARAMS_DEFAULT;
+    return {
+      ...FILTER_PARAMS_DEFAULT,
+      searchType: fixedSearchType,
+    };
   }
-  const parsedFilterParams = safeJSONParse(localFilterParams) as unknown;
+  const parsedFilterParams: unknown = safeJSONParse(localFilterParams);
   if (isPersistentFilterParamsType(parsedFilterParams)) {
-    return merge({}, FILTER_PARAMS_DEFAULT, parsedFilterParams);
+    return merge({}, FILTER_PARAMS_DEFAULT, parsedFilterParams, {
+      searchType: fixedSearchType,
+    });
   }
-  return FILTER_PARAMS_DEFAULT;
+  return {
+    ...FILTER_PARAMS_DEFAULT,
+    searchType: fixedSearchType,
+  };
 };
 
-export const useCachedQueryParams = () => {
+export const useCachedQueryParams = ({
+  fixedSearchType,
+}: {
+  fixedSearchType: FilterParamsType['searchType'];
+}) => {
   const [filterParams, setFilterParams] = useState<FilterParamsType>(
-    FILTER_PARAMS_DEFAULT,
+    {
+      ...FILTER_PARAMS_DEFAULT,
+      searchType: fixedSearchType,
+    },
   );
 
   useUpdateEffect(() => {
     /** When the filter conditions change, take the appropriate key and store it locally */
-    const { searchScope, isPublish, recentlyOpen, searchType } = filterParams;
+    const { searchScope, isPublish } = filterParams;
     localStorageService.setValue(
-      'workspace-develop-filters',
+      getDevelopFilterCacheKey(fixedSearchType),
       JSON.stringify({
         searchScope,
         isPublish,
-        searchType,
-        recentlyOpen,
       }),
     );
-  }, [filterParams]);
+  }, [filterParams, fixedSearchType]);
 
   useEffect(() => {
     /** Asynchronously reads filters from local storage */
-    getDefaultFilterParams().then(filters => {
-      setFilterParams(prev => merge({}, prev, filters));
+    getDefaultFilterParams(fixedSearchType).then(filters => {
+      setFilterParams(prev =>
+        merge({}, prev, filters, { searchType: fixedSearchType }),
+      );
     });
-  }, []);
+  }, [fixedSearchType]);
 
   const debouncedSetSearchValue = useDebounceFn(
     (searchValue = '') => {

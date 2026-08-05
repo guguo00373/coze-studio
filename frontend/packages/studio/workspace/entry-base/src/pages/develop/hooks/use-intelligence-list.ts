@@ -44,7 +44,6 @@ export interface FilterParamsType {
   spaceId: string;
   hasPublished?: boolean;
   searchValue?: string;
-  recentlyOpen?: boolean;
   searchScope?: SearchScope;
   orderBy: search.OrderBy;
 }
@@ -56,7 +55,6 @@ const getIntelligenceList = async (
     types,
     searchValue,
     hasPublished,
-    recentlyOpen,
     searchScope,
     orderBy,
   }: FilterParamsType,
@@ -73,7 +71,6 @@ const getIntelligenceList = async (
         types,
         size: pageSize,
         has_published: hasPublished,
-        recently_open: recentlyOpen,
         cursor_id: dataSource?.nextCursorId,
         search_scope: searchScope,
         // Fixed value, from historical code
@@ -127,7 +124,6 @@ export const useIntelligenceList = ({
     types,
     searchValue,
     hasPublished,
-    recentlyOpen,
     searchScope,
     orderBy,
   },
@@ -152,7 +148,6 @@ export const useIntelligenceList = ({
           types,
           searchValue,
           hasPublished,
-          recentlyOpen,
           searchScope,
           orderBy,
         },
@@ -164,7 +159,6 @@ export const useIntelligenceList = ({
         types.join(','),
         searchValue,
         hasPublished,
-        recentlyOpen,
         searchScope,
         orderBy,
         spaceId,

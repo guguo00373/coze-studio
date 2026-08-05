@@ -24,28 +24,44 @@ import { type LibraryEntityConfig } from '../types';
 
 export const LibraryHeader: React.FC<{
   entityConfigs: LibraryEntityConfig[];
-}> = ({ entityConfigs }) => (
-  <div className="flex items-center justify-between mb-[16px]">
-    <div className="font-[500] text-[20px]">
-      {I18n.t('navigation_workspace_library')}
+  title: string;
+}> = ({ entityConfigs, title }) => {
+  const directCreate =
+    entityConfigs.length === 1 ? entityConfigs[0]?.createButton : undefined;
+
+  return (
+    <div className="flex items-center justify-between mb-[16px]">
+      <div className="font-[500] text-[20px]">{title}</div>
+      {directCreate ? (
+        <Button
+          theme="solid"
+          type="primary"
+          icon={directCreate.icon}
+          data-testid={directCreate.dataTestId}
+          onClick={directCreate.onClick}
+        >
+          {directCreate.label}
+        </Button>
+      ) : (
+        <Menu
+          position="bottomRight"
+          className="w-120px mt-4px mb-4px"
+          render={
+            <Menu.SubMenu mode="menu">
+              {entityConfigs.map(config => config.renderCreateMenu?.() ?? null)}
+            </Menu.SubMenu>
+          }
+        >
+          <Button
+            theme="solid"
+            type="primary"
+            icon={<IconCozPlus />}
+            data-testid="workspace.library.header.create"
+          >
+            {I18n.t('library_resource')}
+          </Button>
+        </Menu>
+      )}
     </div>
-    <Menu
-      position="bottomRight"
-      className="w-120px mt-4px mb-4px"
-      render={
-        <Menu.SubMenu mode="menu">
-          {entityConfigs.map(config => config.renderCreateMenu?.() ?? null)}
-        </Menu.SubMenu>
-      }
-    >
-      <Button
-        theme="solid"
-        type="primary"
-        icon={<IconCozPlus />}
-        data-testid="workspace.library.header.create"
-      >
-        {I18n.t('library_resource')}
-      </Button>
-    </Menu>
-  </div>
-);
+  );
+};
