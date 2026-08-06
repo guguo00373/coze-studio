@@ -81,9 +81,14 @@ func (s *searchImpl) SearchProjects(ctx context.Context, req *searchEntity.Searc
 			es.NewContainsQuery(fieldOfNameRaw, req.Name))
 	}
 
-	if req.IsPublished {
-		searchReq.Query.Bool.Must = append(searchReq.Query.Bool.Must,
-			es.NewEqualQuery(fieldOfHasPublished, conv.BoolToInt(req.IsPublished)))
+	if req.IsPublished != nil {
+		if *req.IsPublished {
+			searchReq.Query.Bool.Must = append(searchReq.Query.Bool.Must,
+				es.NewEqualQuery(fieldOfHasPublished, conv.BoolToInt(*req.IsPublished)))
+		} else {
+			searchReq.Query.Bool.MustNot = append(searchReq.Query.Bool.MustNot,
+				es.NewEqualQuery(fieldOfHasPublished, 1))
+		}
 	}
 
 	if req.IsFav {

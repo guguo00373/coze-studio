@@ -14,7 +14,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-opencoze}
     env_file: *env_file
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
       - ./volumes/postgres/schema.sql:/docker-entrypoint-initdb.d/init.sql
@@ -110,16 +110,12 @@ services:
             echo 'Elasticsearch not ready, waiting...'
             sleep 2
           done
-          echo 'Elasticsearch is ready!'
+            echo 'Elasticsearch is ready!'
             echo 'Running Elasticsearch initialization...'
-            # Use tr (not sed) to strip CRLF: busybox sed does not interpret
-            # the \r escape in regex patterns, so 'sed s/\r$//' is a no-op on
-            # bind-mounted CRLF files.
-            tr -d '\r' < /setup_es.sh > /setup_es_fixed.sh
-            chmod +x /setup_es_fixed.sh
-          for attempt in 1 2 3 4 5; do
-            echo Initialization attempt $$attempt...
-            if /setup_es_fixed.sh --index-dir /es_index_schema; then
+            chmod +x /setup_es.sh
+            for attempt in 1 2 3 4 5; do
+              echo Initialization attempt $$attempt...
+              if /setup_es.sh --index-dir /es_index_schema; then
               touch /tmp/es_init_complete
               echo 'Elasticsearch initialization completed successfully!'
               break
@@ -307,7 +303,7 @@ services:
       DATABASE_NAME: ${POSTGRES_DB:-opencoze}
       DATABASE_SSLMODE: disable
       # Admin email for accessing admin panel
-      ALLOW_REGISTRATION_EMAIL: "admin@qq.com"
+      ALLOW_REGISTRATION_EMAIL: ""
       # Listen on IPv4
       LISTEN_ADDR: "0.0.0.0:8888"
       # Model configuration is loaded from .env (env_file) - do not hardcode keys here
@@ -337,7 +333,7 @@ services:
     build:
       context: ../
       dockerfile: frontend/Dockerfile
-    image: cozedev/coze-studio-web:2026-08-04
+    image: cozedev/coze-studio-web:latest
     container_name: coze-web
     restart: always
     ports:

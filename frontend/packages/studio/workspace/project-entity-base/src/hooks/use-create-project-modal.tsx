@@ -62,6 +62,11 @@ export interface CreateProjectHookProps
    * Button in the upper right corner of the space workspace
    * */
   bizCreateFrom: 'navi' | 'space';
+  /**
+   * The page where the create button lives, so the create action can
+   * skip the guide modal and jump directly to the matching create form.
+   * */
+  pageKind?: CreateType;
   renderAutoGenerate?: (params: RenderAutoGenerateParams) => React.ReactNode;
   extraGuideButtonConfigs?: GuideModalProps['extraButtonConfigs'];
 }
@@ -80,6 +85,7 @@ export const useCreateProjectModalBase = ({
   onBeforeCopyProjectTemplate,
   onProjectTemplateCopyError,
   bizCreateFrom,
+  pageKind,
   renderAutoGenerate,
   extraGuideButtonConfigs,
 }: CreateProjectHookProps) => {
@@ -227,6 +233,14 @@ export const useCreateProjectModalBase = ({
       </>
     ),
     createProject: () => {
+      if (pageKind === 'agent') {
+        startEdit();
+        return;
+      }
+      if (pageKind === 'project') {
+        onGuideChange('project');
+        return;
+      }
       setGuideModalVisible(true);
     },
   };

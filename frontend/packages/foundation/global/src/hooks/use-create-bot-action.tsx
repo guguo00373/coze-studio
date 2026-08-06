@@ -91,7 +91,7 @@ export const useCreateBotAction = ({
     onCopyProjectTemplateSuccess: param => {
       cozeMitt.emit('createProjectByCopyTemplateFromSidebar', param);
       if (newWindowRef.current) {
-        newWindowRef.current.location = `/space/${param.toSpaceId}/develop`;
+        newWindowRef.current.location = `/space/${param.toSpaceId}/agent`;
       }
     },
   });

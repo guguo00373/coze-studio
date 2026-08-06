@@ -40,11 +40,13 @@ export const useIntelligenceActions = ({
   spaceId,
   mutateList,
   reloadList,
+  pageKind,
   extraGuideButtonConfigs,
 }: {
   spaceId: string;
   reloadList: () => void;
   mutateList: Dispatch<SetStateAction<DraftIntelligenceList | undefined>>;
+  pageKind?: 'agent' | 'app';
   extraGuideButtonConfigs?: CreateProjectHookProps['extraGuideButtonConfigs'];
 }): {
   contextHolder: ReactNode;
@@ -65,6 +67,7 @@ export const useIntelligenceActions = ({
     selectSpace: false,
     bizCreateFrom: 'space',
     initialSpaceId: spaceId,
+    pageKind: pageKind === 'app' ? 'project' : pageKind,
     extraGuideButtonConfigs,
     onCreateBotSuccess: botId => {
       if (botId) {

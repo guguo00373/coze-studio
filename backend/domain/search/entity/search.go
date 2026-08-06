@@ -38,7 +38,7 @@ type SearchProjectsRequest struct {
 	Status    []common.IntelligenceStatus
 	Types     []common.IntelligenceType
 
-	IsPublished    bool
+	IsPublished    *bool
 	IsFav          bool
 	IsRecentlyOpen bool
 	OrderFiledName string

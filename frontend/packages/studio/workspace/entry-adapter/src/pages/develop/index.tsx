@@ -134,6 +134,7 @@ export const Develop: FC<DevelopProps> = ({ spaceId, pageKind }) => {
     spaceId,
     mutateList: mutate,
     reloadList: reload,
+    pageKind,
   });
 
   return (

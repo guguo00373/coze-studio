@@ -62,7 +62,8 @@ if [ -n "$ES_USERNAME" ]; then
   AUTH_PARAM="-k -u $ES_USERNAME:$ES_PASSWORD"
 fi
 
-for i in $(seq 1 60); do
+i=1
+while [ $i -le 60 ]; do
   echo "Checking Elasticsearch availability... (attempt $i)"
   if curl -s -f $AUTH_PARAM "${ES_ADDR}/_cat/health"; then
     echo "Elasticsearch is up and running!"
@@ -70,6 +71,7 @@ for i in $(seq 1 60); do
   fi
   echo "Elasticsearch not available, retrying in 1 seconds..."
   sleep 1
+  i=$((i + 1))
 done
 
 echo -e "🔍 Checking smartcn plugin status..."

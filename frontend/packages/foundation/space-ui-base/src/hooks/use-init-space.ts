@@ -97,7 +97,7 @@ export const useInitSpace = ({
             // Get the jump URL of the back cover.
             const targetURL = await getFallbackWorkspaceURL(
               fallbackSpaceID,
-              'develop',
+              'agent',
               checkSpaceID,
             );
             // jump

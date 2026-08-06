@@ -427,7 +427,11 @@ func searchRequestTo2Do(userID int64, req *intelligence.GetDraftIntelligenceList
 		Status:         req.GetStatus(),
 		IsFav:          req.GetIsFav(),
 		IsRecentlyOpen: req.GetRecentlyOpen(),
-		IsPublished:    req.GetHasPublished(),
+	}
+
+	if req.IsSetHasPublished() {
+		hasPublished := req.GetHasPublished()
+		searchReq.IsPublished = &hasPublished
 	}
 
 	if req.GetSearchScope() == intelligence.SearchScope_CreateByMe {

@@ -25,7 +25,7 @@ export const GoBackButton: React.FC = () => {
   const navigate = useNavigate();
   const spaceId = useSpaceId();
   const handleGoBack = useCallback(() => {
-    navigate(`/space/${spaceId}/develop`);
+    navigate(`/space/${spaceId}/agent`);
   }, [spaceId, navigate]);
 
   return (

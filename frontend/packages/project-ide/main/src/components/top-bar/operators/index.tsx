@@ -61,12 +61,12 @@ export const Operators = () => {
     useDeleteIntelligence({
       onDeleteProjectSuccess: () => {
         Toast.success(I18n.t('project_ide_toast_delete_success'));
-        navigate(`/space/${spaceId}/develop`);
+        navigate(`/space/${spaceId}/agent`);
       },
     });
 
   const { modalContextHolder, openModal } = useCopyProjectModal({
-    onSuccess: () => navigate(`/space/${spaceId}/develop`),
+    onSuccess: () => navigate(`/space/${spaceId}/agent`),
   });
   const { projectInfo, initialValue } = useProjectInfo();
   const projectRoles = useProjectRole(projectId);

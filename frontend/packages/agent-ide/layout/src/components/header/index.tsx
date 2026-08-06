@@ -101,7 +101,7 @@ export const BotHeader: React.FC<BotHeaderProps> = props => {
   const diffTask = useDiffTaskStore(state => state.diffTask);
 
   const goBackToBotList = () => {
-    navigate(`/space/${spaceID}/develop`);
+    navigate(`/space/${spaceID}/agent`);
   };
 
   return (

@@ -3,8 +3,11 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
+# Set Go proxy for China
+ENV GOPROXY=https://goproxy.cn,direct
+
 # Install build dependencies for Go
-RUN apk add --no-cache git gcc libc-dev
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache git gcc libc-dev
 
 # Copy go.mod and go.sum first to leverage Docker cache
 COPY backend/go.mod backend/go.sum ./
@@ -28,7 +31,7 @@ WORKDIR /app
 # Install runtime dependencies for Go app and base for Python
 # pax-utils for scanelf, python3 for running Python, python3-dev for headers/shared libs
 # bind-tools for nslookup etc., file for debugging file types
-RUN apk add --no-cache pax-utils python3 python3-dev bind-tools file deno curl
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache pax-utils python3 python3-dev bind-tools file deno curl
 
 RUN deno run -A jsr:@langchain/pyodide-sandbox -c "print('Hello, World')"
 
@@ -37,9 +40,8 @@ RUN apk add --no-cache --virtual .python-build-deps build-base py3-pip git && \
     python3 -m venv --copies --upgrade-deps /app/.venv && \
     # Activate venv and install packages
     . /app/.venv/bin/activate && \
-    # If you want to use other third-party libraries, you can install them here.
-    pip install urllib3==1.26.16 && \
-    pip install --no-cache-dir h11==0.16.0 httpx==0.28.1 pillow==11.2.1 pdfplumber==0.11.7 python-docx==1.2.0 numpy==2.3.1 && \
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple urllib3==1.26.16 && \
+    pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --no-cache-dir h11==0.16.0 httpx==0.28.1 pillow==11.2.1 pdfplumber==0.11.7 python-docx==1.2.0 numpy==2.3.1 && \
     # Deactivate (optional, as RUN is a new shell)
     # deactivate && \
     # Remove build dependencies
