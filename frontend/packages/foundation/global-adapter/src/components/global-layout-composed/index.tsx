@@ -29,6 +29,8 @@ import {
   IconCozCompass,
   IconCozCompassFill,
   IconCozDocument,
+  IconCozCheckMarkCircle,
+  IconCozSetting,
 } from '@coze-arch/coze-design/icons';
 
 import { AccountDropdown } from '../account-dropdown';
@@ -73,6 +75,23 @@ export const GlobalLayoutComposed: FC<PropsWithChildren> = ({ children }) => {
             activeIcon: <IconCozCompassFill />,
             path: '/explore',
             dataTestId: 'layout_explore-button',
+          },
+          {
+            title: I18n.t('menu_title_evaluation', {}, '评测'),
+            icon: <IconCozCheckMarkCircle />,
+            activeIcon: <IconCozCheckMarkCircle />,
+            path: '/evaluation',
+            dataTestId: 'layout_evaluation-button',
+          },
+          {
+            title: I18n.t('menu_title_admin', {}, '配置管理'),
+            icon: <IconCozSetting />,
+            activeIcon: <IconCozSetting />,
+            path: '/admin',
+            dataTestId: 'layout_admin-button',
+            onClick: () => {
+              window.location.href = '/admin#model-management';
+            },
           },
         ]}
         extras={[

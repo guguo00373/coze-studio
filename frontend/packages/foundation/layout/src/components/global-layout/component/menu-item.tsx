@@ -36,6 +36,7 @@ export const GLobalLayoutMenuItem: FC<LayoutMenuItem> = ({
   activeIcon,
   path,
   dataTestId,
+  onClick,
 }) => {
   const location = useLocation();
 
@@ -61,7 +62,12 @@ export const GLobalLayoutMenuItem: FC<LayoutMenuItem> = ({
       to={newPath}
       target={isLink ? '_blank' : undefined}
       className="no-underline"
-      onClick={() => {
+      onClick={e => {
+        if (onClick) {
+          e.preventDefault();
+          onClick();
+          return;
+        }
         reportNavClick(title);
       }}
       data-testid={dataTestId}

@@ -91,7 +91,7 @@ export const DatabaseInner = ({
 
   const handleClose = () => {
     if (window.history.length === 1) {
-      navigate(`/space/${spaceId}/library`);
+      navigate(`/space/${spaceId}/database`);
     }
     navigate(-1);
   };

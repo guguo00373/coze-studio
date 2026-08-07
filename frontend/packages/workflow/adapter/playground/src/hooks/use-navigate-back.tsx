@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 
 import { type WorkflowGlobalStateEntity } from '@coze-workflow/playground';
-import { type WorkflowMode, workflowApi } from '@coze-workflow/base/api';
+import { WorkflowMode, workflowApi } from '@coze-workflow/base/api';
 import { reporter } from '@coze-arch/logger';
 import {
   usePageJumpResponse,
@@ -144,9 +144,14 @@ export const useNavigateBack = () => {
         eventName: 'workflow_navigate_back_to_list',
       });
       // If history is only one page, navigate (-1) does not take effect at this time, you need to manually specify the path
-      // At present, the dead path is written first. The disadvantage is that it needs to be changed with the change of the page structure, and then optimized for a better implementation later.
-      // /library coze 2.0 mixed resource list page
-      navigate(`/space/${spaceId}/library`);
+      // The original hard-coded /library path does not exist in this app, which
+      // triggers the global error page. Fall back to the space list page of the
+      // matching resource type instead.
+      const listPath =
+        flowMode === WorkflowMode.ChatFlow
+          ? `/space/${spaceId}/chatflow`
+          : `/space/${spaceId}/workflow`;
+      navigate(listPath);
     }
   };
 

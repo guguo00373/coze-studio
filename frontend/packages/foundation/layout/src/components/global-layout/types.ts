@@ -38,6 +38,7 @@ export interface LayoutMenuItem {
   activeIcon: ReactNode;
   path: string | string[];
   dataTestId?: string;
+  onClick?: () => void;
 }
 
 export type LayoutAccountMenuItem =

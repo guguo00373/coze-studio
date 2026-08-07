@@ -133,7 +133,7 @@ export const KnowledgeIDENavBar = ({
 
   const handleBack = () => {
     onBack?.();
-    navigate(`/space/${params.spaceID}/library`);
+    navigate(`/space/${params.spaceID}/knowledge`);
   };
 
   const fromProject = params.biz === 'project';
