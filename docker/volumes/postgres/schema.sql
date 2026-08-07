@@ -1107,3 +1107,167 @@ CREATE TABLE IF NOT EXISTS workflow_version (
 CREATE INDEX IF NOT EXISTS idx_id_created_at ON workflow_version (workflow_id, created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_workflow_id_version ON workflow_version (workflow_id, version);
 COMMENT ON TABLE workflow_version IS 'Workflow Canvas Version Information Table';
+
+-- Create 'eval_set' table
+CREATE TABLE IF NOT EXISTS eval_set (
+    id BIGSERIAL,
+    space_id BIGINT NOT NULL DEFAULT 0,
+    name VARCHAR(255) NOT NULL DEFAULT '',
+    description VARCHAR(2000) NOT NULL DEFAULT '',
+    schema_json JSONB,
+    item_count BIGINT NOT NULL DEFAULT 0,
+    status SMALLINT NOT NULL DEFAULT 0,
+    created_by VARCHAR(64) NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_eval_set_created_by ON eval_set (created_by);
+COMMENT ON TABLE eval_set IS 'evaluation set';
+COMMENT ON COLUMN eval_set.id IS 'id';
+COMMENT ON COLUMN eval_set.space_id IS 'space id';
+COMMENT ON COLUMN eval_set.name IS 'evaluation set name';
+COMMENT ON COLUMN eval_set.schema_json IS 'field schema definition';
+COMMENT ON COLUMN eval_set.item_count IS 'item count';
+COMMENT ON COLUMN eval_set.status IS 'status 0 draft 1 enabled';
+COMMENT ON COLUMN eval_set.created_by IS 'creator id';
+
+-- Create 'eval_set_item' table
+CREATE TABLE IF NOT EXISTS eval_set_item (
+    id BIGSERIAL,
+    eval_set_id BIGINT NOT NULL,
+    data_json JSONB NOT NULL,
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_eval_set_item_set ON eval_set_item (eval_set_id);
+COMMENT ON TABLE eval_set_item IS 'evaluation set item';
+COMMENT ON COLUMN eval_set_item.id IS 'id';
+COMMENT ON COLUMN eval_set_item.eval_set_id IS 'evaluation set id';
+COMMENT ON COLUMN eval_set_item.data_json IS 'item data';
+
+-- Create 'evaluator' table
+CREATE TABLE IF NOT EXISTS evaluator (
+    id BIGSERIAL,
+    space_id BIGINT NOT NULL DEFAULT 0,
+    name VARCHAR(255) NOT NULL DEFAULT '',
+    description VARCHAR(2000) NOT NULL DEFAULT '',
+    type SMALLINT NOT NULL DEFAULT 1,
+    model_id VARCHAR(64) NOT NULL DEFAULT '',
+    prompt TEXT NOT NULL,
+    temperature DOUBLE PRECISION NOT NULL DEFAULT 0,
+    status SMALLINT NOT NULL DEFAULT 0,
+    created_by VARCHAR(64) NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_evaluator_created_by ON evaluator (created_by);
+COMMENT ON TABLE evaluator IS 'evaluator';
+COMMENT ON COLUMN evaluator.id IS 'id';
+COMMENT ON COLUMN evaluator.space_id IS 'space id';
+COMMENT ON COLUMN evaluator.name IS 'evaluator name';
+COMMENT ON COLUMN evaluator.type IS 'type 1 prompt';
+COMMENT ON COLUMN evaluator.model_id IS 'model id';
+COMMENT ON COLUMN evaluator.prompt IS 'scoring prompt template';
+COMMENT ON COLUMN evaluator.status IS 'status 0 draft 1 enabled';
+COMMENT ON COLUMN evaluator.created_by IS 'creator id';
+
+-- Create 'experiment' table
+CREATE TABLE IF NOT EXISTS experiment (
+    id BIGSERIAL,
+    space_id BIGINT NOT NULL DEFAULT 0,
+    name VARCHAR(255) NOT NULL DEFAULT '',
+    description VARCHAR(2000) NOT NULL DEFAULT '',
+    eval_set_id BIGINT NOT NULL,
+    target_type SMALLINT NOT NULL,
+    target_id VARCHAR(128) NOT NULL DEFAULT '',
+    target_config_json JSONB,
+    evaluator_ids JSONB,
+    concurrency INT NOT NULL DEFAULT 1,
+    status SMALLINT NOT NULL DEFAULT 0,
+    run_stats_json JSONB,
+    error_msg VARCHAR(2000) NOT NULL DEFAULT '',
+    started_at TIMESTAMPTZ(3),
+    finished_at TIMESTAMPTZ(3),
+    created_by VARCHAR(64) NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_experiment_created_by ON experiment (created_by);
+COMMENT ON TABLE experiment IS 'evaluation experiment';
+COMMENT ON COLUMN experiment.id IS 'id';
+COMMENT ON COLUMN experiment.space_id IS 'space id';
+COMMENT ON COLUMN experiment.name IS 'experiment name';
+COMMENT ON COLUMN experiment.eval_set_id IS 'evaluation set id';
+COMMENT ON COLUMN experiment.target_type IS 'target type 1 agent 2 workflow 3 chatflow';
+COMMENT ON COLUMN experiment.target_id IS 'target id';
+COMMENT ON COLUMN experiment.target_config_json IS 'target config';
+COMMENT ON COLUMN experiment.evaluator_ids IS 'evaluator id list';
+COMMENT ON COLUMN experiment.concurrency IS 'concurrency';
+COMMENT ON COLUMN experiment.status IS 'status 0 pending 1 running 2 success 3 failed 4 partial';
+COMMENT ON COLUMN experiment.run_stats_json IS 'run stats';
+COMMENT ON COLUMN experiment.created_by IS 'creator id';
+
+-- Create 'experiment_item_result' table
+CREATE TABLE IF NOT EXISTS experiment_item_result (
+    id BIGSERIAL,
+    experiment_id BIGINT NOT NULL,
+    eval_set_item_id BIGINT NOT NULL,
+    status SMALLINT NOT NULL DEFAULT 0,
+    input_json JSONB,
+    actual_output TEXT,
+    output_json JSONB,
+    target_error_msg VARCHAR(2000) NOT NULL DEFAULT '',
+    evaluator_results_json JSONB,
+    tokens_used_json JSONB,
+    latency_ms BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_experiment_item_result_exp ON experiment_item_result (experiment_id);
+COMMENT ON TABLE experiment_item_result IS 'experiment item result';
+COMMENT ON COLUMN experiment_item_result.id IS 'id';
+COMMENT ON COLUMN experiment_item_result.experiment_id IS 'experiment id';
+COMMENT ON COLUMN experiment_item_result.eval_set_item_id IS 'evaluation set item id';
+COMMENT ON COLUMN experiment_item_result.status IS 'status 0 pending 1 success 2 failed';
+COMMENT ON COLUMN experiment_item_result.input_json IS 'input snapshot';
+COMMENT ON COLUMN experiment_item_result.actual_output IS 'actual output';
+COMMENT ON COLUMN experiment_item_result.evaluator_results_json IS 'evaluator results';
+COMMENT ON COLUMN experiment_item_result.tokens_used_json IS 'tokens used';
+
+-- Create 'experiment_aggr_result' table
+CREATE TABLE IF NOT EXISTS experiment_aggr_result (
+    id BIGSERIAL,
+    experiment_id BIGINT NOT NULL,
+    evaluator_scores_json JSONB,
+    total_item_count BIGINT NOT NULL DEFAULT 0,
+    success_item_count BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_experiment_aggr_exp ON experiment_aggr_result (experiment_id);
+COMMENT ON TABLE experiment_aggr_result IS 'experiment aggregation result';
+COMMENT ON COLUMN experiment_aggr_result.id IS 'id';
+COMMENT ON COLUMN experiment_aggr_result.experiment_id IS 'experiment id';
+COMMENT ON COLUMN experiment_aggr_result.evaluator_scores_json IS 'evaluator scores aggregation';
+
+-- Create 'evaluator_custom_template' table
+CREATE TABLE IF NOT EXISTS evaluator_custom_template (
+    id BIGSERIAL,
+    name VARCHAR(100) NOT NULL DEFAULT '',
+    description VARCHAR(2000) NOT NULL DEFAULT '',
+    prompt TEXT NOT NULL,
+    created_by VARCHAR(64) NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+CREATE INDEX IF NOT EXISTS idx_eval_custom_tpl_created_by ON evaluator_custom_template (created_by);
+COMMENT ON TABLE evaluator_custom_template IS 'user custom evaluator template';
+COMMENT ON COLUMN evaluator_custom_template.id IS 'id';
+COMMENT ON COLUMN evaluator_custom_template.name IS 'template name';
+COMMENT ON COLUMN evaluator_custom_template.prompt IS 'scoring prompt template';

@@ -46,6 +46,12 @@ import {
   ExplorePluginPage,
   ExploreTemplatePage,
   OAuthConsentConfirmPage,
+  EvaluationLayout,
+  EvalSetListPage,
+  EvalSetDetailPage,
+  EvaluatorListPage,
+  ExperimentListPage,
+  ExperimentDetailPage,
 } from './async-components';
 
 export const router: ReturnType<typeof createBrowserRouter> =
@@ -334,6 +340,42 @@ export const router: ReturnType<typeof createBrowserRouter> =
               loader: () => ({
                 type: 'template',
               }),
+            },
+          ],
+        },
+
+        // evaluation
+        {
+          path: 'evaluation',
+          Component: EvaluationLayout,
+          loader: () => ({
+            hasSider: true,
+            requireAuth: true,
+          }),
+          children: [
+            {
+              index: true,
+              element: <Navigate to="sets" replace />,
+            },
+            {
+              path: 'sets',
+              Component: EvalSetListPage,
+            },
+            {
+              path: 'sets/:id',
+              Component: EvalSetDetailPage,
+            },
+            {
+              path: 'evaluators',
+              Component: EvaluatorListPage,
+            },
+            {
+              path: 'experiments',
+              Component: ExperimentListPage,
+            },
+            {
+              path: 'experiments/:id',
+              Component: ExperimentDetailPage,
             },
           ],
         },

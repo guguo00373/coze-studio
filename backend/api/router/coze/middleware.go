@@ -440,6 +440,10 @@ func _playground_apiMw() []app.HandlerFunc {
 	return nil
 }
 
+func _evaluation_apiMw() []app.HandlerFunc {
+	return nil
+}
+
 func _deletepromptresourceMw() []app.HandlerFunc {
 	// your code...
 	return nil

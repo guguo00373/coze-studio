@@ -345,6 +345,35 @@ func Register(r *server.Hertz) {
 			}
 		}
 		{
+			_evaluation_api := _api.Group("/evaluation_api", _evaluation_apiMw()...)
+			_evaluation_api.POST("/create_eval_set", append(_evaluation_apiMw(), coze.CreateEvalSet)...)
+			_evaluation_api.POST("/update_eval_set", append(_evaluation_apiMw(), coze.UpdateEvalSet)...)
+			_evaluation_api.POST("/delete_eval_set", append(_evaluation_apiMw(), coze.DeleteEvalSet)...)
+			_evaluation_api.GET("/get_eval_set", append(_evaluation_apiMw(), coze.GetEvalSet)...)
+			_evaluation_api.GET("/list_eval_sets", append(_evaluation_apiMw(), coze.ListEvalSets)...)
+			_evaluation_api.POST("/add_eval_set_items", append(_evaluation_apiMw(), coze.AddEvalSetItems)...)
+			_evaluation_api.POST("/update_eval_set_item", append(_evaluation_apiMw(), coze.UpdateEvalSetItem)...)
+			_evaluation_api.POST("/delete_eval_set_items", append(_evaluation_apiMw(), coze.DeleteEvalSetItems)...)
+			_evaluation_api.GET("/list_eval_set_items", append(_evaluation_apiMw(), coze.ListEvalSetItems)...)
+			_evaluation_api.POST("/create_evaluator", append(_evaluation_apiMw(), coze.CreateEvaluator)...)
+			_evaluation_api.POST("/update_evaluator", append(_evaluation_apiMw(), coze.UpdateEvaluator)...)
+			_evaluation_api.POST("/delete_evaluator", append(_evaluation_apiMw(), coze.DeleteEvaluator)...)
+			_evaluation_api.GET("/get_evaluator", append(_evaluation_apiMw(), coze.GetEvaluator)...)
+			_evaluation_api.GET("/list_evaluators", append(_evaluation_apiMw(), coze.ListEvaluators)...)
+			_evaluation_api.GET("/list_evaluator_templates", append(_evaluation_apiMw(), coze.ListEvaluatorTemplates)...)
+			_evaluation_api.POST("/create_evaluator_template", append(_evaluation_apiMw(), coze.CreateEvaluatorTemplate)...)
+			_evaluation_api.POST("/delete_evaluator_template", append(_evaluation_apiMw(), coze.DeleteEvaluatorTemplate)...)
+			_evaluation_api.POST("/parse_eval_set_file", append(_evaluation_apiMw(), coze.ParseEvalSetFile)...)
+			_evaluation_api.GET("/list_targets", append(_evaluation_apiMw(), coze.ListTargets)...)
+			_evaluation_api.POST("/create_experiment", append(_evaluation_apiMw(), coze.CreateExperiment)...)
+			_evaluation_api.POST("/update_experiment", append(_evaluation_apiMw(), coze.UpdateExperiment)...)
+			_evaluation_api.POST("/delete_experiment", append(_evaluation_apiMw(), coze.DeleteExperiment)...)
+			_evaluation_api.GET("/get_experiment", append(_evaluation_apiMw(), coze.GetExperiment)...)
+			_evaluation_api.GET("/list_experiments", append(_evaluation_apiMw(), coze.ListExperiments)...)
+			_evaluation_api.POST("/start_experiment", append(_evaluation_apiMw(), coze.StartExperiment)...)
+			_evaluation_api.GET("/get_experiment_detail", append(_evaluation_apiMw(), coze.GetExperimentDetail)...)
+		}
+		{
 			_plugin := _api.Group("/plugin", _pluginMw()...)
 			_plugin.POST("/get_oauth_schema", append(_getoauthschemaMw(), coze.GetOAuthSchema)...)
 			{

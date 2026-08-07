@@ -157,3 +157,23 @@ export const OAuthConsentConfirmPage = lazy(() =>
     default: exps.ConsentConfirmPage,
   })),
 );
+
+// Evaluation pages
+export const EvaluationLayout = lazy(() =>
+  import('../pages/evaluation/EvaluationLayout'),
+);
+export const EvalSetListPage = lazy(() =>
+  import('../pages/evaluation/EvalSetListPage'),
+);
+export const EvalSetDetailPage = lazy(() =>
+  import('../pages/evaluation/EvalSetDetailPage'),
+);
+export const EvaluatorListPage = lazy(() =>
+  import('../pages/evaluation/EvaluatorListPage'),
+);
+export const ExperimentListPage = lazy(() =>
+  import('../pages/evaluation/ExperimentListPage'),
+);
+export const ExperimentDetailPage = lazy(() =>
+  import('../pages/evaluation/ExperimentDetailPage'),
+);
